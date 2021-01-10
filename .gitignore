@@ -1,0 +1,4 @@
+*
+!.gitignore
+!/skiplist.py
+!/test.py
