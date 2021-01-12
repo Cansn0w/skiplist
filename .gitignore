@@ -1,4 +1,6 @@
 *
 !.gitignore
-!/skiplist.py
-!/test.py
+!/LICENSE.txt
+!readme.md
+!setup.py
+!skiplist/
