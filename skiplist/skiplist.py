@@ -11,7 +11,7 @@ import operator as _operator
 from collections.abc import MutableMapping as _MutableMapping
 from random import random as _random
 from math import log2 as _log2
-from itertools import tee as _tee
+from itertools import tee as _tee, islice as _islice
 
 _null_key = object()
 
@@ -122,7 +122,7 @@ class SkipList(_MutableMapping):
         """Insert the key and value mapping.
         If a mapping with the specified key exists, having replacing=True will update its value, or otherwise leave it unchanged."""
         *intermediates, node = self.__trace(key)
-        if self.__comparator.eq(node.key, key):
+        if node.key is not _null_key and self.__comparator.eq(node.key, key):
             if replacing:
                 node.value = value
         else: # create new node
@@ -315,4 +315,7 @@ class SkipList(_MutableMapping):
 
     def __repr__(self):
         """Return the string prepresentation of the list"""
+        if (self.__size > 40):
+            content = ', '.join('%s: %s' % i for i in _islice(self.items(), 20))
+            return f'SkipList({{{content}, ...and {self.__size} more}})'
         return 'SkipList({%s})' % ', '.join('%s: %s' % i for i in self.items())

@@ -222,6 +222,16 @@ class SkipListTest(unittest.TestCase):
         self.assertEqual(len(expected_dist), len(dist.values()))
         self.assertEqual(Counter(expected_dist), Counter(dist.values()))
 
+    def test_repr(self):
+        items = (
+            (3, 'three'),
+            (2, 2),
+            (1, None),
+            (4, 4),
+        )
+        l = self.get_list(items)
+        self.assertEqual(str(l), r'SkipList({1: None, 2: 2, 3: three, 4: 4})')
+
 
 if __name__ == '__main__':
     unittest.main()
