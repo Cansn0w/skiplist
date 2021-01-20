@@ -67,16 +67,16 @@ class SkipListTest(unittest.TestCase):
                 after = tuple(i for i in content if i >= test_value)
                 self.assertEqual(tuple(skiplist.after(test_value)), after)
 
-        for i in skiplist._SkipList__heads:
+        for i in skiplist._SkipList__sentinel:
             self.check_structure(i.next)
 
     def test_checkers(self):
         items = (1, 2, 3, 4, 5)
         l = self.get_list(items, random_height=lambda x: 5)
-        for i, (n1, n2) in enumerate(pairwise(l._SkipList__heads[-1])):
+        for i, (n1, n2) in enumerate(pairwise(l._SkipList__sentinel[-1])):
             self.assertEqual(measure_height(n1), 5)
             self.assertEqual(measure_height(n2), 5)
-        for i, (n1, n2) in enumerate(pairwise(l._SkipList__heads[0])):
+        for i, (n1, n2) in enumerate(pairwise(l._SkipList__sentinel[0])):
             self.assertNotEqual(n1, n2)
             self.assertEqual(n1.value, items[i])
             self.assertEqual(n2.value, items[i + 1])
@@ -243,17 +243,16 @@ class SkipListTest(unittest.TestCase):
 
         dist = {}
         def count_nodes(node):
-            while hasattr(node, 'next'):
-                if type(node.value) == int:
-                    height = 0
-                    current = node
-                    while hasattr(current, 'below'):
-                        current = current.below
-                        height += 1
-                    dist[current.value] = height
+            while type(node.next.value) == int:
                 node = node.next
+                height = 0
+                current = node
+                while hasattr(current, 'below'):
+                    current = current.below
+                    height += 1
+                dist[current.value] = height
         l = SkipList(items, random_height=_random_height)
-        heads = l._SkipList__heads
+        heads = l._SkipList__sentinel
         lengths = []
         for i in heads:
             lengths.append(count_nodes(i))
