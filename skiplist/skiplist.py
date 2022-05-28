@@ -293,6 +293,6 @@ class SkipList(_Sequence):
     def __repr__(self):
         """Return the string prepresentation of the list."""
         if (self.__size > 100):
-            content = ', '.join(str(i) for i in _islice(self.items(), 60))
-            return f'SkipList({{{content}, ...and {self.__size - 60} more}})'
+            content = ', '.join(str(i) for i in _islice(self, 40))
+            return f'SkipList([{content}... and {self.__size - 40} more])'
         return 'SkipList([%s])' % ', '.join(str(i) for i in self)
