@@ -10,9 +10,9 @@ with open('LICENSE.txt') as f:
 setup(
     name='skiplist',
     version='0.1.0',
-    author='Chenrui Liu',
-    author_email='chenruiliu@cansnow.net',
-    description='A skiplist python library',
+    author='Chester Liu',
+    author_email='chester@cansnow.net',
+    description='A skiplist python implementation',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/Cansn0w/skiplist',

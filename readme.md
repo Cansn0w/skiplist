@@ -1,3 +1,3 @@
 # Skiplist
 
-A python library providing the skiplist data structure.
+A python implementation of the skiplist data structure.
