@@ -2,6 +2,7 @@ import unittest
 import random
 import time
 import itertools
+import timeit
 from skiplist import SkipList
 from math import log2
 from collections import Counter
@@ -22,6 +23,17 @@ def measure_height(node):
         node = node.below
         height += 1
     return height
+
+class RandInt:
+    """Practically only shuffles all integers within the limit, use a prime number as increment"""
+    def __init__(self, increment = 723761, limit = 2**20):
+        self.state = int(limit * 0.4)
+        self.increment = increment
+        self.limit = limit
+
+    def next(self):
+        self.state = (self.state + self.increment) % self.limit
+        return self.state
 
 
 class SkipListTest(unittest.TestCase):
@@ -266,6 +278,26 @@ class SkipListTest(unittest.TestCase):
         self.assertEqual(str(l), 'SkipList([1, 2, 3, 4])')
         l = self.get_list(range(200))
         self.assertEqual(str(l), 'SkipList([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39... and 160 more])')
+
+    def test_time_complexity(self):
+        error_tolerance = 0.1
+        r = RandInt(26153, 2**15)
+        data = list(r.next() for i in range(2**15))
+        l_1n = SkipList(itertools.islice(data, 2**12))
+        l_2n = SkipList(data)
+
+        def task(l):
+            for i in itertools.islice(data, 2**12):
+                if i not in l:
+                    raise Exception('bad data')
+
+        for i in range(5):
+            t1 = min(timeit.Timer('task(l_1n)', globals=locals()).repeat(repeat=1, number=1))
+            t2 = min(timeit.Timer('task(l_2n)', globals=locals()).repeat(repeat=1, number=1))
+            if (t2 / t1 < 15 / 12 * (1 + error_tolerance)):
+                break
+        else:
+            self.fail('SkipList.__contains__ operation took more than log(n) time')
 
 
 if __name__ == '__main__':
