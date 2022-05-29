@@ -24,6 +24,7 @@ def measure_height(node):
         height += 1
     return height
 
+
 class RandInt:
     """Practically only shuffles all integers within the limit, use a prime number as increment"""
     def __init__(self, increment = 723761, limit = 2**20):
@@ -41,7 +42,7 @@ class SkipListTest(unittest.TestCase):
     def get_list(self, *args, random_height=None, **kwargs):
         if random_height == None:
             r = random.Random('SkipListTest')
-            random_height = lambda x: min(int(-log2(1 - r.random())), 16)
+            random_height = lambda: min(int(-log2(1 - r.random())), 16)
         return SkipList(*args, **kwargs, random_height=random_height)
 
     def check_structure(self, node):
@@ -79,16 +80,16 @@ class SkipListTest(unittest.TestCase):
                 after = tuple(i for i in content if i >= test_value)
                 self.assertEqual(tuple(skiplist.after(test_value)), after)
 
-        for i in skiplist._SkipList__sentinel:
+        for i in skiplist._SkipList__sentinels:
             self.check_structure(i.next)
 
     def test_checkers(self):
         items = (1, 2, 3, 4, 5)
-        l = self.get_list(items, random_height=lambda x: 5)
-        for i, (n1, n2) in enumerate(pairwise(l._SkipList__sentinel[-1])):
+        l = self.get_list(items, random_height=lambda: 5)
+        for i, (n1, n2) in enumerate(pairwise(l._SkipList__sentinels[-1])):
             self.assertEqual(measure_height(n1), 5)
             self.assertEqual(measure_height(n2), 5)
-        for i, (n1, n2) in enumerate(pairwise(l._SkipList__sentinel[0])):
+        for i, (n1, n2) in enumerate(pairwise(l._SkipList__sentinels[0])):
             self.assertNotEqual(n1, n2)
             self.assertEqual(n1.value, items[i])
             self.assertEqual(n2.value, items[i + 1])
@@ -246,11 +247,11 @@ class SkipListTest(unittest.TestCase):
         random.Random('shuffle').shuffle(items)
 
         r = random.Random('list')
-        def _random_height(limit):
+        def _random_height():
             """returns a non-negative integer"""
-            return min(int(-log2(1 - r.random())), limit)
+            return min(int(-log2(1 - r.random())), 16)
 
-        expected_dist = list(_random_height(16) for i in range(size))
+        expected_dist = list(_random_height() for i in range(size))
         r = random.Random('list')
 
         dist = {}
@@ -264,7 +265,7 @@ class SkipListTest(unittest.TestCase):
                     height += 1
                 dist[current.value] = height
         l = SkipList(items, random_height=_random_height)
-        heads = l._SkipList__sentinel
+        heads = l._SkipList__sentinels
         lengths = []
         for i in heads:
             lengths.append(count_nodes(i))
@@ -284,7 +285,7 @@ class SkipListTest(unittest.TestCase):
         r = RandInt(26153, 2**15)
         data = list(r.next() for i in range(2**15))
         l_1n = SkipList(itertools.islice(data, 2**12))
-        l_2n = SkipList(data)
+        l_8n = SkipList(data)
 
         def task(l):
             for i in itertools.islice(data, 2**12):
@@ -293,7 +294,7 @@ class SkipListTest(unittest.TestCase):
 
         for i in range(5):
             t1 = min(timeit.Timer('task(l_1n)', globals=locals()).repeat(repeat=1, number=1))
-            t2 = min(timeit.Timer('task(l_2n)', globals=locals()).repeat(repeat=1, number=1))
+            t2 = min(timeit.Timer('task(l_8n)', globals=locals()).repeat(repeat=1, number=1))
             if (t2 / t1 < 15 / 12 * (1 + error_tolerance)):
                 break
         else:

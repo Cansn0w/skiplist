@@ -11,9 +11,20 @@ import operator as _operator
 from collections.abc import Sequence as _Sequence
 from random import random as _random
 from math import log2 as _log2
-from itertools import tee as _tee, islice as _islice
+from itertools import islice as _islice
 
 _sentinel_value = object()
+
+def _link2(a, b):
+    a.link(b)
+
+def _link3(a, b, c):
+    a.link(b)
+    b.link(c)
+
+def _random_height():
+    """returns a non-negative integer"""
+    return int(-_log2(1 - _random()))
 
 
 class BaseLinkedListNode:
@@ -23,16 +34,13 @@ class BaseLinkedListNode:
     def __init__(self, value):
         self.value = value
 
-    def link(self, other):
-        self.next = other
-
 
 class LinkedListNode(BaseLinkedListNode):
 
     __slots__ = ('prev', )
 
     def link(self, other):
-        super().link(other)
+        self.next = other
         other.prev = self
 
 
@@ -44,17 +52,8 @@ class SkipListNode(BaseLinkedListNode):
         super().__init__(value)
         self.below = below
 
-
-def _link(*args):
-    i1, i2 = _tee(args)
-    next(i2, None)
-    for a, b in zip(i1, i2):
-        a.link(b)
-    return args
-
-def _random_height(limit):
-    """returns a non-negative integer"""
-    return min(int(-_log2(1 - _random())), limit)
+    def link(self, other):
+        self.next = other
 
 
 class SkipList(_Sequence):
@@ -67,18 +66,23 @@ class SkipList(_Sequence):
         """
         self.__comparator = _operator if comparator == None else comparator
         self.__random_height = _random_height if random_height == None else random_height
-        self.__sentinel = [LinkedListNode(_sentinel_value)]
-        _link(self.__sentinel[0], self.__sentinel[0])
+        self.__sentinels = [LinkedListNode(_sentinel_value)]
+        _link2(self.__sentinels[0], self.__sentinels[0])
         self.add = self.insert
         self.__size = 0
         self.extends(iterable)
 
     def __trace(self, value):
-        node = self.__sentinel[-1]
+        le = self.__comparator.le
+        node = self.__sentinels[-1]
         path = []
         while True:
-            while node.next.value is not _sentinel_value and self.__comparator.le(node.next.value, value):
-                node = node.next
+            next_node = node.next
+            next_value = next_node.value
+            while next_value is not _sentinel_value and le(next_value, value):
+                node = next_node
+                next_node = node.next
+                next_value = next_node.value
             path.append(node)
             if hasattr(node, 'below'):
                 node = node.below
@@ -108,7 +112,7 @@ class SkipList(_Sequence):
             index = index + self.__size
         if index < 0 or index >= self.__size:
             raise IndexError('list index out of range')
-        node = self.__sentinel[0].next
+        node = self.__sentinels[0].next
         for i in range(index):
             node = node.next
         return node
@@ -122,19 +126,19 @@ class SkipList(_Sequence):
                 node.value = value
         else: # create new node
             # generate new layers if needed
-            height = self.__random_height(16)
-            for i in range(len(self.__sentinel) - 1, height):
-                new_sentinel = SkipListNode(_sentinel_value, self.__sentinel[-1])
-                _link(new_sentinel, new_sentinel)
-                self.__sentinel.append(new_sentinel)
+            height = min(self.__random_height(), 8 + int(_log2(self.__size + 1)))
+            for i in range(len(self.__sentinels) - 1, height):
+                new_sentinel = SkipListNode(_sentinel_value, self.__sentinels[-1])
+                _link2(new_sentinel, new_sentinel)
+                self.__sentinels.append(new_sentinel)
                 intermediates.insert(0, new_sentinel)
             # insert the linkedlist node
             new_node = LinkedListNode(value)
-            _link(node, new_node, node.next)
+            _link3(node, new_node, node.next)
             # insert skiplist nodes
             for n in intermediates[:-height - 1:-1]:
                 new_node = SkipListNode(value, new_node)
-                _link(n, new_node, n.next)
+                _link3(n, new_node, n.next)
             self.__size += 1
 
     def extends(self, iterable, replacing=True):
@@ -148,12 +152,12 @@ class SkipList(_Sequence):
         if self.__comparator.ne(nodes[-1].value, value):
             raise KeyError(value)
         if nodes[-1].prev.value is _sentinel_value:
-            previous = self.__sentinel
+            previous = self.__sentinels
         else:
             previous = reversed(self.__trace(nodes[-1].prev.value))
         for p, n in zip(previous, reversed(nodes)):
             if p.next is n:
-                _link(p, n.next)
+                _link2(p, n.next)
             else:
                 break
         self.__size -= 1
@@ -161,8 +165,8 @@ class SkipList(_Sequence):
 
     def clear(self):
         """Removes all of the elements from this list."""
-        self.__sentinel = [LinkedListNode(_sentinel_value)]
-        _link(self.__sentinel[0], self.__sentinel[0])
+        self.__sentinels = [LinkedListNode(_sentinel_value)]
+        _link2(self.__sentinels[0], self.__sentinels[0])
         self.__size = 0
 
     def first(self):
@@ -170,14 +174,14 @@ class SkipList(_Sequence):
         if self.__size == 0:
             raise LookupError('List is empty.')
         else:
-            return self.__sentinel[0].next.value
+            return self.__sentinels[0].next.value
 
     def last(self):
         """Returns the last (greatest) value currently in this list."""
         if self.__size == 0:
             raise LookupError('List is empty.')
         else:
-            return self.__sentinel[0].prev.value
+            return self.__sentinels[0].prev.value
 
     def shift(self):
         """Retrieves and removes the first (smallest) value,
@@ -218,19 +222,19 @@ class SkipList(_Sequence):
         """Returns an iterator of items between start and end."""
         start = self.__ceiling(start, include_start)
         end = self.__floor(end, include_end).next
-        if end is not self.__sentinel[0] and self.__comparator.gt(start.value, end.value):
+        if end is not self.__sentinels[0] and self.__comparator.gt(start.value, end.value):
             end = start
         return self.__range(start, end)
 
     def after(self, value, inclusive=True):
         """Returns an iterator of values greater than (or equal to, if inclusive is True) given value."""
         start = self.__ceiling(value, inclusive)
-        return self.__range(start, self.__sentinel[0])
+        return self.__range(start, self.__sentinels[0])
 
     def before(self, value, inclusive=False):
         """Returns an iterator of values smaller than (or equal to, if inclusive is True) given value."""
         end = self.__floor(value, inclusive).next
-        return self.__range(self.__sentinel[0].next, end)
+        return self.__range(self.__sentinels[0].next, end)
 
     def copy(self):
         """Returns a shallow copy of this list."""
@@ -272,14 +276,14 @@ class SkipList(_Sequence):
 
     def __reversed__(self):
         """Returns an iterator over the elements in this list in descending order."""
-        current, end = self.__sentinel[0].prev, self.__sentinel[0]
+        current, end = self.__sentinels[0].prev, self.__sentinels[0]
         while current.value is not _sentinel_value and current != end:
             yield current.value
             current = current.prev
 
     def __iter__(self):
         """Returns an iterator over the elements in this list in ascending order."""
-        return self.__range(self.__sentinel[0].next, self.__sentinel[0])
+        return self.__range(self.__sentinels[0].next, self.__sentinels[0])
 
     def __eq__(self, other):
         """Returns True if the other container is a SkipList and has the same content."""
@@ -292,7 +296,7 @@ class SkipList(_Sequence):
 
     def __repr__(self):
         """Return the string prepresentation of the list."""
-        if (self.__size > 100):
+        if (self.__size > 48):
             content = ', '.join(str(i) for i in _islice(self, 40))
             return f'SkipList([{content}... and {self.__size - 40} more])'
         return 'SkipList([%s])' % ', '.join(str(i) for i in self)
