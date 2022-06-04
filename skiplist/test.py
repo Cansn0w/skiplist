@@ -166,6 +166,19 @@ class SkipListTest(unittest.TestCase):
         del l[0]
         self.check_content(l, (4,))
 
+    def test_default_getters(self):
+        null_object = {}
+        items = []
+        l = self.get_list(items)
+        self.assertIs(l.first(default=null_object), null_object)
+        self.assertIs(l.last(default=null_object), null_object)
+        self.assertIs(l.floor(4, default=null_object), null_object)
+        self.assertIs(l.ceiling(7, default=null_object), null_object)
+        items = [5, 7, 11]
+        l = self.get_list(items)
+        self.assertIs(l.floor(4, default=null_object), null_object)
+        self.assertIs(l.ceiling(13, default=null_object), null_object)
+
     def test_index_access(self):
         items = [0, 1, 2]
         l = self.get_list(items)

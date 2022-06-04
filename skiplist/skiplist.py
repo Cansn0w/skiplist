@@ -169,16 +169,20 @@ class SkipList(_Sequence):
         _link2(self.__sentinels[0], self.__sentinels[0])
         self.__size = 0
 
-    def first(self):
+    def first(self, default=_sentinel_value):
         """Returns the first (smallest) value in this list."""
         if self.__size == 0:
+            if default != _sentinel_value:
+                return default
             raise LookupError('List is empty.')
         else:
             return self.__sentinels[0].next.value
 
-    def last(self):
+    def last(self, default=_sentinel_value):
         """Returns the last (greatest) value currently in this list."""
         if self.__size == 0:
+            if default != _sentinel_value:
+                return default
             raise LookupError('List is empty.')
         else:
             return self.__sentinels[0].prev.value
@@ -201,19 +205,23 @@ class SkipList(_Sequence):
             value = self.last()
         return self.remove(value)
 
-    def ceiling(self, value, inclusive=True):
+    def ceiling(self, value, inclusive=True, default=_sentinel_value):
         """Returns the smallest element in this list greater than (or equal to, if inclusive is True) the given element,
         raise LookupError if there is no such element."""
         node = self.__ceiling(value, inclusive)
         if node.value is _sentinel_value:
+            if default != _sentinel_value:
+                return default
             raise LookupError('Cannot find a value greater then %s.' % value)
         else:
             return node.value
 
-    def floor(self, value, inclusive=True):
+    def floor(self, value, inclusive=True, default=_sentinel_value):
         """Returns the greatest value in this list less than (or equal to, if inclusive is True) the given value, or null if there is no such element."""
         node = self.__floor(value, inclusive)
         if node.value is _sentinel_value:
+            if default != _sentinel_value:
+                return default
             raise LookupError('Cannot find a value smaller then %s.' % value)
         else:
             return node.value
