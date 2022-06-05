@@ -167,17 +167,17 @@ class SkipListTest(unittest.TestCase):
         self.check_content(l, (4,))
 
     def test_default_getters(self):
-        null_object = {}
+        default_value = object()
         items = []
         l = self.get_list(items)
-        self.assertIs(l.first(default=null_object), null_object)
-        self.assertIs(l.last(default=null_object), null_object)
-        self.assertIs(l.floor(4, default=null_object), null_object)
-        self.assertIs(l.ceiling(7, default=null_object), null_object)
+        self.assertIs(l.first(default=default_value), default_value)
+        self.assertIs(l.last(default=default_value), default_value)
+        self.assertIs(l.floor(4, default=default_value), default_value)
+        self.assertIs(l.ceiling(7, default=default_value), default_value)
         items = [5, 7, 11]
         l = self.get_list(items)
-        self.assertIs(l.floor(4, default=null_object), null_object)
-        self.assertIs(l.ceiling(13, default=null_object), null_object)
+        self.assertIs(l.floor(4, default=default_value), default_value)
+        self.assertIs(l.ceiling(13, default=default_value), default_value)
 
     def test_index_access(self):
         items = [0, 1, 2]
@@ -294,6 +294,10 @@ class SkipListTest(unittest.TestCase):
         self.assertEqual(str(l), 'SkipList([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39... and 160 more])')
 
     def test_time_complexity(self):
+        """In this test we expect the contains methods to have logarithmic time complexity.
+        Specifically, we expect the methods to take roughly 25% more time when list size has grown from 2^12 to 2^15,
+        whereas if the operation had a linear time complexity, it would take 700% more time.
+        """
         error_tolerance = 0.1
         r = RandInt(26153, 2**15)
         data = list(r.next() for i in range(2**15))

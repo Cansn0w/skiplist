@@ -1,10 +1,14 @@
 """A SkipList Python implementation
 
 A SkipList stores an ordered sequence of items.
-It offers efficient item lookup and support finding closest value or values within a range
+It offsers efficient item lookup and allows finding closest value or values within a range
 
-This implementation uses an interface similar to Java ConcurrentSkipListSet
-https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentSkipListSet.html
+This implementation uses an interface similar to Java TreeSet
+https://docs.oracle.com/javase/8/docs/api/java/util/TreeSet.html
+and provides similar performance guarantees, i.e. log(n) time cost for the basic operations (add, remove and contains).
+
+Note items are expected to implement rich comparison or a comparator should be provided.
+Also no equal items can be added.
 """
 
 import operator as _operator
